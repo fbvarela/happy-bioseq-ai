@@ -14,26 +14,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen bg-gray-950">
-        <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="/" className="flex items-center gap-2">
-              <span className="text-green-400 font-bold text-lg tracking-tight">
-                BioSeq<span className="text-white">AI</span>
-              </span>
-              <span className="text-xs text-gray-500 border border-gray-700 px-2 py-0.5 rounded-full">
-                beta
-              </span>
-            </a>
-            <div className="flex items-center gap-6">
-              <NavLinks />
-              <ProviderToggle />
-              <SetupButton />
+        <ProviderProvider>
+          <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur sticky top-0 z-50">
+            <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+              <a href="/" className="flex items-center gap-2">
+                <span className="text-green-400 font-bold text-lg tracking-tight">
+                  BioSeq<span className="text-white">AI</span>
+                </span>
+                <span className="text-xs text-gray-500 border border-gray-700 px-2 py-0.5 rounded-full">
+                  beta
+                </span>
+              </a>
+              <div className="flex items-center gap-6">
+                <NavLinks />
+                <ProviderToggle />
+                <SetupButton />
+              </div>
             </div>
-          </div>
-        </nav>
-        <main>
-          <ProviderProvider>{children}</ProviderProvider>
-        </main>
+          </nav>
+          <main>{children}</main>
+        </ProviderProvider>
       </body>
     </html>
   );
