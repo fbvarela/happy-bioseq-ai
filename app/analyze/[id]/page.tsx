@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { getAnalysis, getChatHistory } from "@/lib/db";
 import AnalysisPanel from "@/components/AnalysisPanel";
-import ChatInterface from "@/components/ChatInterface";
-import LiteraturePanel from "@/components/LiteraturePanel";
+import AnalyzePageClient from "@/components/AnalyzePageClient";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -60,22 +59,14 @@ export default async function AnalyzePage({ params }: Props) {
           <AnalysisPanel result={result} />
         </div>
 
-        {/* Right: Chat */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <h2 className="text-white font-semibold">AI Research Assistant</h2>
-          </div>
-          <ChatInterface
+        {/* Right: Chat + Literature */}
+        <div>
+          <AnalyzePageClient
             analysisId={result.id}
             initialHistory={history}
+            annotation={result.aiAnnotation}
           />
         </div>
-      </div>
-
-      {/* Literature */}
-      <div className="mt-6">
-        <LiteraturePanel analysisId={result.id} annotation={result.aiAnnotation} />
       </div>
 
       {/* Raw sequence toggle */}

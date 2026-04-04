@@ -4,16 +4,17 @@ import { annotateSequenceCohere, streamChatCohere, analyzeVariantCohere } from "
 
 export type AIProvider = "claude" | "cohere";
 
-export function getProvider(): AIProvider {
-  const p = process.env.AI_PROVIDER?.toLowerCase();
+export function resolveProvider(requested?: string): AIProvider {
+  const p = (requested ?? process.env.AI_PROVIDER ?? "").toLowerCase();
   return p === "cohere" ? "cohere" : "claude";
 }
 
 export async function annotateSequenceAI(
   sequence: string,
-  bioAnalysis: BioAnalysis
+  bioAnalysis: BioAnalysis,
+  provider?: string
 ) {
-  return getProvider() === "cohere"
+  return resolveProvider(provider) === "cohere"
     ? annotateSequenceCohere(sequence, bioAnalysis)
     : annotateSequence(sequence, bioAnalysis);
 }
@@ -23,10 +24,11 @@ export async function* streamChatAI(
   bioAnalysis: BioAnalysis,
   annotation: object,
   history: ChatMessage[],
-  userMessage: string
+  userMessage: string,
+  provider?: string
 ): AsyncGenerator<string> {
   const gen =
-    getProvider() === "cohere"
+    resolveProvider(provider) === "cohere"
       ? streamChatCohere(sequence, bioAnalysis, annotation, history, userMessage)
       : streamChat(sequence, bioAnalysis, annotation, history, userMessage);
 
@@ -38,9 +40,10 @@ export async function* streamChatAI(
 export async function analyzeVariantAI(
   wildType: string,
   mutant: string,
-  sequenceType: string
+  sequenceType: string,
+  provider?: string
 ) {
-  return getProvider() === "cohere"
+  return resolveProvider(provider) === "cohere"
     ? analyzeVariantCohere(wildType, mutant, sequenceType)
     : analyzeVariant(wildType, mutant, sequenceType);
 }

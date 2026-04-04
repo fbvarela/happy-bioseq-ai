@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { ChatMessage } from "@/lib/types";
+import type { AIProvider } from "@/lib/ai";
 
 interface Props {
   analysisId: string;
   initialHistory?: ChatMessage[];
+  provider?: AIProvider;
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -15,7 +17,7 @@ const SUGGESTED_QUESTIONS = [
   "What species share similar sequences?",
 ];
 
-export default function ChatInterface({ analysisId, initialHistory = [] }: Props) {
+export default function ChatInterface({ analysisId, initialHistory = [], provider }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialHistory);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -40,7 +42,7 @@ export default function ChatInterface({ analysisId, initialHistory = [] }: Props
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ analysisId, message: text }),
+        body: JSON.stringify({ analysisId, message: text, provider }),
       });
 
       if (!res.ok) throw new Error("Chat request failed");

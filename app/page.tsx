@@ -4,12 +4,14 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import SequenceInput from "@/components/SequenceInput";
 import VariantComparator from "@/components/VariantComparator";
+import { useProvider } from "@/components/ProviderContext";
 
 type Tab = "analyze" | "variant";
 
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { provider } = useProvider();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const tab: Tab = searchParams.get("tab") === "variant" ? "variant" : "analyze";
@@ -21,7 +23,7 @@ function HomeContent() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sequence }),
+        body: JSON.stringify({ sequence, provider }),
       });
 
       if (!res.ok) {

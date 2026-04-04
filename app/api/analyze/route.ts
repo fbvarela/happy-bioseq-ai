@@ -8,7 +8,7 @@ const BIO_SERVICE_URL = process.env.BIO_SERVICE_URL ?? "http://localhost:8001";
 
 export async function POST(req: NextRequest) {
   try {
-    const { sequence } = await req.json();
+    const { sequence, provider } = await req.json();
 
     if (!sequence || typeof sequence !== "string") {
       return NextResponse.json({ error: "sequence is required" }, { status: 400 });
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     }
 
     // AI annotation via Claude
-    const aiAnnotation = await annotateSequenceAI(clean, bioAnalysis);
+    const aiAnnotation = await annotateSequenceAI(clean, bioAnalysis, provider);
 
     const result: SequenceAnalysisResult = {
       id: randomUUID(),
