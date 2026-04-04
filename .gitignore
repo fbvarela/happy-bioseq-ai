@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+package-lock.json
+.pnp
+.pnp.js
+
+# Build output
+.next/
+out/
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.local.json
+
+# IDE
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+bio-service/__pycache__/
+bio-service/**/__pycache__/
+bio-service/*.pyc
+bio-service/.venv/
+bio-service/venv/
+
+# TypeScript
+*.tsbuildinfo
+
+# Vercel
+.vercel
