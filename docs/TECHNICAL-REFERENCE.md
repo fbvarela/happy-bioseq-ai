@@ -48,8 +48,9 @@
 |------|------|
 | Neon Postgres + pgvector | Primary database + vector similarity search |
 | PubMed API (NCBI eutils) | Scientific literature search |
-| Vercel | Frontend deployment |
-| Docker (recommended) | Bio-service containerisation for production |
+| Vercel | Frontend (Next.js) deployment |
+| Fly.io | Python bio-service deployment (Docker-based PaaS) |
+| Docker | Bio-service containerisation (`bio-service/Dockerfile`) |
 
 ---
 
@@ -531,7 +532,7 @@ Respond in JSON format:
 
 | Parameter | Value |
 |-----------|-------|
-| Chat model | `command-r-plus` |
+| Chat model | `command-r-plus-08-2024` |
 | Embed model | `embed-english-v3.0` |
 | Embedding dimensions | 1,024 |
 | Input type | `search_query` (query) / `search_document` (abstracts) |
