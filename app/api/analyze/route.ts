@@ -22,17 +22,18 @@ export async function POST(req: NextRequest) {
     // Call Python bio-service for deterministic bioinformatics analysis
     let bioAnalysis: BioAnalysis;
     try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 30_000);
       const bioRes = await fetch(`${BIO_SERVICE_URL}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sequence: clean }),
-        signal: AbortSignal.timeout(30_000),
+        signal: controller.signal,
       });
-
+      clearTimeout(timer);
       if (!bioRes.ok) throw new Error(`Bio-service error: ${bioRes.status}`);
       bioAnalysis = await bioRes.json();
     } catch (err) {
-      // Fallback: basic analysis without bio-service
       console.warn("Bio-service unavailable, using fallback:", err);
       bioAnalysis = fallbackAnalysis(clean);
     }
@@ -80,5 +81,8 @@ function fallbackAnalysis(sequence: string): BioAnalysis {
     gcContent: seqType === "DNA" || seqType === "RNA"
       ? (gcCount / sequence.length) * 100
       : undefined,
+    orfs: [],
+    motifs: [],
+    repeatRegions: [],
   };
 }

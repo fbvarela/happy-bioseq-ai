@@ -1,15 +1,16 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getAnalysis, getChatHistory } from "@/lib/db";
 import AnalysisPanel from "@/components/AnalysisPanel";
 import AnalyzePageClient from "@/components/AnalyzePageClient";
+import AnalysisSkeleton from "@/components/AnalysisSkeleton";
+import CopyLinkButton from "@/components/CopyLinkButton";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-export default async function AnalyzePage({ params }: Props) {
-  const { id } = await params;
-
+async function AnalysisContent({ id }: { id: string }) {
   let result;
   let history;
   try {
@@ -18,7 +19,6 @@ export default async function AnalyzePage({ params }: Props) {
       getChatHistory(id),
     ]);
   } catch {
-    // DB might not be configured — show a not-found
     notFound();
   }
 
@@ -35,6 +35,7 @@ export default async function AnalyzePage({ params }: Props) {
             </a>
             <span className="text-gray-600">·</span>
             <span className="text-xs font-mono text-gray-500">{result.id}</span>
+            <CopyLinkButton />
           </div>
           <h1 className="text-2xl font-bold text-white">
             {result.bioAnalysis.sequenceType} Sequence Analysis
@@ -54,12 +55,9 @@ export default async function AnalyzePage({ params }: Props) {
 
       {/* Main layout */}
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Left: Analysis */}
         <div>
           <AnalysisPanel result={result} />
         </div>
-
-        {/* Right: Chat + Literature */}
         <div>
           <AnalyzePageClient
             analysisId={result.id}
@@ -81,5 +79,14 @@ export default async function AnalyzePage({ params }: Props) {
         </div>
       </details>
     </div>
+  );
+}
+
+export default async function AnalyzePage({ params }: Props) {
+  const { id } = await params;
+  return (
+    <Suspense fallback={<AnalysisSkeleton />}>
+      <AnalysisContent id={id} />
+    </Suspense>
   );
 }

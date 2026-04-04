@@ -1,7 +1,6 @@
 """Variant comparison utilities."""
 
-from Bio import pairwise2
-from Bio.pairwise2 import format_alignment
+from Bio.Align import PairwiseAligner
 
 
 def align_and_diff(wild_type: str, mutant: str) -> dict:
@@ -22,17 +21,23 @@ def align_and_diff(wild_type: str, mutant: str) -> dict:
 
     # Pairwise alignment for indels
     try:
-        alignments = pairwise2.align.globalms(wt, mt, 2, -1, -5, -0.5, one_alignment_only=True)
-        if not alignments:
+        aligner = PairwiseAligner()
+        aligner.mode = "global"
+        aligner.match_score = 2
+        aligner.mismatch_score = -1
+        aligner.open_gap_score = -5
+        aligner.extend_gap_score = -0.5
+
+        alignments = aligner.align(wt, mt)
+        aln = next(iter(alignments), None)
+        if aln is None:
             return {"diff_positions": [], "alignment_score": 0.0}
 
-        aln = alignments[0]
-        aligned_wt = aln.seqA
-        aligned_mt = aln.seqB
+        aligned_wt, aligned_mt = str(aln).split("\n")[0], str(aln).split("\n")[2]
 
         diff_positions = []
         real_pos = 0
-        for i, (a, b) in enumerate(zip(aligned_wt, aligned_mt)):
+        for a, b in zip(aligned_wt, aligned_mt):
             if a != b:
                 diff_positions.append(real_pos)
             if a != "-":
@@ -41,15 +46,21 @@ def align_and_diff(wild_type: str, mutant: str) -> dict:
         max_score = 2.0 * max(len(wt), len(mt))
         norm_score = aln.score / max_score if max_score > 0 else 0.0
 
+        num_insertions = aligned_wt.count("-")
+        num_deletions = aligned_mt.count("-")
+        num_substitutions = sum(
+            1 for a, b in zip(aligned_wt, aligned_mt)
+            if a != "-" and b != "-" and a != b
+        )
+
         return {
-            "diff_positions": diff_positions[:100],  # cap at 100
-            "num_substitutions": sum(1 for a, b in zip(aligned_wt, aligned_mt) if a != "-" and b != "-" and a != b),
-            "num_insertions": aligned_mt.count("-"),
-            "num_deletions": aligned_wt.count("-"),
+            "diff_positions": diff_positions[:100],
+            "num_substitutions": num_substitutions,
+            "num_insertions": num_insertions,
+            "num_deletions": num_deletions,
             "alignment_score": float(max(0, min(1, norm_score))),
         }
     except Exception:
-        # Fallback: character-level diff at common length
         min_len = min(len(wt), len(mt))
         diff_positions = [i for i in range(min_len) if wt[i] != mt[i]]
         return {

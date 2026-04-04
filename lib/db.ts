@@ -107,6 +107,25 @@ export async function getChatHistory(
   return rows as Array<{ role: "user" | "assistant"; content: string }>;
 }
 
+export async function getRecentAnalyses(limit = 20): Promise<
+  Array<{ id: string; sequenceType: string; length: number; summary: string; createdAt: string }>
+> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT id, raw_sequence, bio_analysis, ai_annotation, created_at
+    FROM sequence_analyses
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `;
+  return rows.map((r) => ({
+    id: r.id as string,
+    sequenceType: (r.bio_analysis as { sequenceType: string }).sequenceType,
+    length: (r.bio_analysis as { length: number }).length,
+    summary: (r.ai_annotation as { summary: string }).summary?.slice(0, 120) ?? "",
+    createdAt: (r.created_at as Date).toISOString(),
+  }));
+}
+
 export async function saveLiterature(
   papers: LiteratureResult[],
   embeddings: number[][]

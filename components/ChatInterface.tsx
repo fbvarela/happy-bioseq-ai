@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
 import type { ChatMessage } from "@/lib/types";
 import type { AIProvider } from "@/lib/ai";
 
@@ -108,8 +110,23 @@ export default function ChatInterface({ analysisId, initialHistory = [], provide
                   : "bg-gray-800 text-gray-100 border border-gray-700 rounded-bl-sm"
               }`}
             >
-              {msg.content || (
+              {!msg.content ? (
                 <span className="animate-pulse text-gray-400">Thinking...</span>
+              ) : msg.role === "user" ? (
+                msg.content
+              ) : (
+                <ReactMarkdown
+                  rehypePlugins={[rehypeSanitize]}
+                  components={{
+                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
+                    code: ({ children }) => <code className="bg-gray-900 text-green-300 px-1 rounded font-mono text-xs">{children}</code>,
+                    strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
               )}
             </div>
           </div>

@@ -16,6 +16,20 @@ When analyzing sequences:
 
 You assist wet-lab biologists who may not have computational expertise.`;
 
+/** Strip markdown fences then extract the first JSON object. */
+export function parseJsonResponse<T>(text: string, fallback: T): T {
+  const stripped = text
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+  const match = stripped.match(/\{[\s\S]*\}/);
+  try {
+    return match ? JSON.parse(match[0]) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function annotateSequence(
   sequence: string,
   bioAnalysis: BioAnalysis
@@ -61,13 +75,7 @@ Respond in JSON format:
 
   const response = await stream.finalMessage();
   const text = response.content.find((b) => b.type === "text")?.text ?? "{}";
-
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) : { summary: text };
-  } catch {
-    return { summary: text };
-  }
+  return parseJsonResponse(text, { summary: text });
 }
 
 export async function* streamChat(
@@ -86,10 +94,13 @@ Annotation summary: ${(annotation as { summary?: string }).summary ?? "none"}
 
 Raw sequence (first 500 chars): ${sequence.slice(0, 500)}`;
 
+  // Cap history to last 20 messages (10 turns) to stay within context limits
+  const recentHistory = history.slice(-20);
+
   const messages: Anthropic.MessageParam[] = [
     { role: "user", content: contextBlock },
     { role: "assistant", content: "I have reviewed the sequence and its analysis. How can I help you?" },
-    ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+    ...recentHistory.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     { role: "user", content: userMessage },
   ];
 
@@ -145,10 +156,5 @@ Identify differences and assess likely functional impact. Respond in JSON:
   });
 
   const text = response.content.find((b) => b.type === "text")?.text ?? "{}";
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) : { impact: "uncertain", score: 0.5, explanation: text };
-  } catch {
-    return { impact: "uncertain", score: 0.5, explanation: text };
-  }
+  return parseJsonResponse(text, { impact: "uncertain", score: 0.5, explanation: text });
 }

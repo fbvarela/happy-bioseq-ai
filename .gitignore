@@ -35,6 +35,7 @@ bio-service/venv/
 
 # TypeScript
 *.tsbuildinfo
+next-env.d.ts
 
 # Vercel
 .vercel
