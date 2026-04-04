@@ -1,5 +1,7 @@
 import { getRecentAnalyses } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 const TYPE_BADGE: Record<string, string> = {
   DNA:     "text-green-400 border-green-800 bg-green-900/20",
   RNA:     "text-blue-400  border-blue-800  bg-blue-900/20",

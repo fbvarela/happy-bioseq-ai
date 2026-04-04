@@ -12,17 +12,31 @@ interface Props {
   provider?: AIProvider;
 }
 
-const SUGGESTED_QUESTIONS = [
+const ALL_QUESTIONS = [
   "What disease could a mutation at position 100 cause?",
   "Are there known drugs targeting this protein family?",
   "Summarize what this gene does in plain English",
   "What species share similar sequences?",
+  "Is this likely a coding or non-coding region?",
+  "What would happen if the start codon were mutated?",
+  "Are there any known disease-associated variants in this region?",
+  "What motifs suggest this could be a regulatory element?",
+  "How conserved is this sequence across mammals?",
+  "What experimental techniques would you use to study this gene?",
+  "Does this sequence have any signal peptide characteristics?",
+  "What transcription factors might bind to this promoter region?",
 ];
+
+function pickSuggestions(n = 4): string[] {
+  const shuffled = [...ALL_QUESTIONS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
 
 export default function ChatInterface({ analysisId, initialHistory = [], provider }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialHistory);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [suggestions] = useState(() => pickSuggestions(4));
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,7 +99,7 @@ export default function ChatInterface({ analysisId, initialHistory = [], provide
           <div className="space-y-3">
             <p className="text-gray-400 text-sm">Ask anything about the analyzed sequence:</p>
             <div className="grid gap-2">
-              {SUGGESTED_QUESTIONS.map((q) => (
+              {suggestions.map((q) => (
                 <button
                   key={q}
                   onClick={() => sendMessage(q)}
