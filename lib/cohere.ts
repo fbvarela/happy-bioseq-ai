@@ -29,7 +29,7 @@ export async function annotateSequenceCohere(
   structuralFeatures?: string[];
 }> {
   const response = await cohere.chat({
-    model: "command-r-plus",
+    model: "command-r-plus-08-2024",
     preamble: BIO_PREAMBLE,
     responseFormat: { type: "json_object" },
     message: `Analyze this ${bioAnalysis.sequenceType} sequence and provide biological annotation.
@@ -85,7 +85,7 @@ Raw sequence (first 500 chars): ${sequence.slice(0, 500)}`;
   ];
 
   const stream = await cohere.chatStream({
-    model: "command-r-plus",
+    model: "command-r-plus-08-2024",
     preamble: BIO_PREAMBLE,
     chatHistory,
     message: userMessage,
@@ -109,7 +109,7 @@ export async function analyzeVariantCohere(
   conservedPositions?: number[];
 }> {
   const response = await cohere.chat({
-    model: "command-r-plus",
+    model: "command-r-plus-08-2024",
     preamble: BIO_PREAMBLE,
     responseFormat: { type: "json_object" },
     message: `Compare this ${sequenceType} wild-type vs mutant sequence and predict functional impact.
