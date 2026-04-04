@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getAnalysis, getChatHistory } from "@/lib/db";
 import AnalysisPanel from "@/components/AnalysisPanel";
 import ChatInterface from "@/components/ChatInterface";
+import LiteraturePanel from "@/components/LiteraturePanel";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -70,6 +71,11 @@ export default async function AnalyzePage({ params }: Props) {
             initialHistory={history}
           />
         </div>
+      </div>
+
+      {/* Literature */}
+      <div className="mt-6">
+        <LiteraturePanel analysisId={result.id} annotation={result.aiAnnotation} />
       </div>
 
       {/* Raw sequence toggle */}
