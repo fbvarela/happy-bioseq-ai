@@ -1,9 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { BioAnalysis, ChatMessage } from "./types";
 
-export const claude = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Lazy-initialize so a missing/empty API key doesn't crash module import
+let _claude: Anthropic | null = null;
+function getClient(): Anthropic {
+  if (!_claude) {
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (!key) throw new Error("ANTHROPIC_API_KEY is not configured");
+    _claude = new Anthropic({ apiKey: key });
+  }
+  return _claude;
+}
 
 const BIO_SYSTEM_PROMPT = `You are BioSeq AI, an expert bioinformatics assistant specializing in DNA, RNA, and protein sequence analysis. You have deep knowledge of molecular biology, genomics, proteomics, and structural biology.
 
@@ -41,7 +48,7 @@ export async function annotateSequence(
   diseaseAssociations?: string[];
   structuralFeatures?: string[];
 }> {
-  const stream = claude.messages.stream({
+  const stream = getClient().messages.stream({
     model: "claude-opus-4-6",
     max_tokens: 2048,
     thinking: { type: "enabled", budget_tokens: 1024 },
@@ -104,7 +111,7 @@ Raw sequence (first 500 chars): ${sequence.slice(0, 500)}`;
     { role: "user", content: userMessage },
   ];
 
-  const stream = claude.messages.stream({
+  const stream = getClient().messages.stream({
     model: "claude-opus-4-6",
     max_tokens: 1024,
     system: BIO_SYSTEM_PROMPT,
@@ -131,7 +138,7 @@ export async function analyzeVariant(
   explanation: string;
   conservedPositions?: number[];
 }> {
-  const response = await claude.messages.create({
+  const response = await getClient().messages.create({
     model: "claude-opus-4-6",
     max_tokens: 1024,
     thinking: { type: "enabled", budget_tokens: 1024 },

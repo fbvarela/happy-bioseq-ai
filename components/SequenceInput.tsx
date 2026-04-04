@@ -18,18 +18,32 @@ export default function SequenceInput({ onAnalyze, loading }: Props) {
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  function parseFasta(text: string): string {
+    const lines = text.split(/\r?\n/);
+    let seq = "";
+    let started = false;
+    for (const line of lines) {
+      if (line.startsWith(">")) {
+        if (started) break; // stop at the second header — take only first sequence
+        started = true;
+      } else if (started) {
+        seq += line.replace(/\s/g, "");
+      }
+    }
+    // Not a FASTA file — return raw text stripped of whitespace
+    return seq || text.replace(/\s/g, "");
+  }
+
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (ev) => {
-      let text = ev.target?.result as string;
-      // Strip FASTA header if present
-      if (text.startsWith(">")) {
-        text = text.split("\n").slice(1).join("").replace(/\s/g, "");
-      }
-      setSequence(text.trim());
+      const text = ev.target?.result as string;
+      setSequence(parseFasta(text));
+      // Reset so the same file can be re-selected
+      e.target.value = "";
     };
     reader.readAsText(file);
   }
