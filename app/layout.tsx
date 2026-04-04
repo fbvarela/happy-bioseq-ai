@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import SetupButton from "@/components/SetupButton";
 import { ProviderProvider, ProviderToggle } from "@/components/ProviderContext";
+import NavLinks from "@/components/NavLinks";
 
 export const metadata: Metadata = {
   title: "BioSeq AI — Sequence Analysis Assistant",
@@ -23,10 +24,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 beta
               </span>
             </a>
-            <div className="flex items-center gap-6 text-sm text-gray-400">
-              <a href="/" className="hover:text-white transition-colors">Analyze</a>
-              <a href="/?tab=variant" className="hover:text-white transition-colors">Variants</a>
-              <a href="/history" className="hover:text-white transition-colors">History</a>
+            <div className="flex items-center gap-6">
+              <NavLinks />
               <ProviderToggle />
               <SetupButton />
             </div>
