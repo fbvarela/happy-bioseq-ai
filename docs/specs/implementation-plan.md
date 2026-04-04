@@ -259,11 +259,11 @@ Add a "Related Literature" accordion below the analysis panel. Each paper card s
 
 | # | Question | Owner | Priority |
 |---|---|---|---|
-| 1 | Should analysis results expire? If yes, after how long? | Product | Low |
-| 2 | Do we need auth in v0.1 or is public-by-ID sufficient? | Product | Medium |
+| 1 | Should analysis results expire? If yes, after how long? | Product | Low | yes 1mont
+| 2 | Do we need auth in v0.1 or is public-by-ID sufficient? | Product | Medium | public by id
 | 3 | What's the deployment target for the Python bio-service — Railway, Fly, or inline TypeScript? | Engineering | High |
-| 4 | Should the chat use prompt caching for the sequence context block? (Cost optimization) | Engineering | Low |
-| 5 | Should we add a loading skeleton on `/analyze/[id]` while DB fetches? | Design | Medium |
+| 4 | Should the chat use prompt caching for the sequence context block? (Cost optimization) | Engineering | Low | yes
+| 5 | Should we add a loading skeleton on `/analyze/[id]` while DB fetches? | Design | Medium | yes
 
 ---
 
