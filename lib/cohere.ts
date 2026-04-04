@@ -1,11 +1,11 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { CohereClient } from "cohere-ai";
 import type { BioAnalysis, ChatMessage } from "./types";
 
-export const claude = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+export const cohere = new CohereClient({
+  token: process.env.COHERE_API_KEY,
 });
 
-const BIO_SYSTEM_PROMPT = `You are BioSeq AI, an expert bioinformatics assistant specializing in DNA, RNA, and protein sequence analysis. You have deep knowledge of molecular biology, genomics, proteomics, and structural biology.
+const BIO_PREAMBLE = `You are BioSeq AI, an expert bioinformatics assistant specializing in DNA, RNA, and protein sequence analysis. You have deep knowledge of molecular biology, genomics, proteomics, and structural biology.
 
 When analyzing sequences:
 - Be precise and scientifically accurate
@@ -16,7 +16,7 @@ When analyzing sequences:
 
 You assist wet-lab biologists who may not have computational expertise.`;
 
-export async function annotateSequence(
+export async function annotateSequenceCohere(
   sequence: string,
   bioAnalysis: BioAnalysis
 ): Promise<{
@@ -27,15 +27,11 @@ export async function annotateSequence(
   diseaseAssociations?: string[];
   structuralFeatures?: string[];
 }> {
-  const stream = claude.messages.stream({
-    model: "claude-opus-4-6",
-    max_tokens: 2048,
-    thinking: { type: "enabled", budget_tokens: 1024 },
-    system: BIO_SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: `Analyze this ${bioAnalysis.sequenceType} sequence and provide biological annotation.
+  const response = await cohere.chat({
+    model: "command-r-plus",
+    preamble: BIO_PREAMBLE,
+    responseFormat: { type: "json_object" },
+    message: `Analyze this ${bioAnalysis.sequenceType} sequence and provide biological annotation.
 
 Sequence (${bioAnalysis.length} bp/aa):
 ${sequence.slice(0, 2000)}${sequence.length > 2000 ? "... [truncated]" : ""}
@@ -55,13 +51,9 @@ Respond in JSON format:
   "diseaseAssociations": ["disease1", "disease2"] or [],
   "structuralFeatures": ["feature1", "feature2"] or []
 }`,
-      },
-    ],
   });
 
-  const response = await stream.finalMessage();
-  const text = response.content.find((b) => b.type === "text")?.text ?? "{}";
-
+  const text = response.text ?? "{}";
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : { summary: text };
@@ -70,7 +62,7 @@ Respond in JSON format:
   }
 }
 
-export async function* streamChat(
+export async function* streamChatCohere(
   sequence: string,
   bioAnalysis: BioAnalysis,
   annotation: object,
@@ -86,31 +78,30 @@ Annotation summary: ${(annotation as { summary?: string }).summary ?? "none"}
 
 Raw sequence (first 500 chars): ${sequence.slice(0, 500)}`;
 
-  const messages: Anthropic.MessageParam[] = [
-    { role: "user", content: contextBlock },
-    { role: "assistant", content: "I have reviewed the sequence and its analysis. How can I help you?" },
-    ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-    { role: "user", content: userMessage },
+  const chatHistory = [
+    { role: "USER" as const, message: contextBlock },
+    { role: "CHATBOT" as const, message: "I have reviewed the sequence and its analysis. How can I help you?" },
+    ...history.map((m) => ({
+      role: m.role === "user" ? ("USER" as const) : ("CHATBOT" as const),
+      message: m.content,
+    })),
   ];
 
-  const stream = claude.messages.stream({
-    model: "claude-opus-4-6",
-    max_tokens: 1024,
-    system: BIO_SYSTEM_PROMPT,
-    messages,
+  const stream = await cohere.chatStream({
+    model: "command-r-plus",
+    preamble: BIO_PREAMBLE,
+    chatHistory,
+    message: userMessage,
   });
 
   for await (const event of stream) {
-    if (
-      event.type === "content_block_delta" &&
-      event.delta.type === "text_delta"
-    ) {
-      yield event.delta.text;
+    if (event.eventType === "text-generation") {
+      yield event.text;
     }
   }
 }
 
-export async function analyzeVariant(
+export async function analyzeVariantCohere(
   wildType: string,
   mutant: string,
   sequenceType: string
@@ -120,15 +111,11 @@ export async function analyzeVariant(
   explanation: string;
   conservedPositions?: number[];
 }> {
-  const response = await claude.messages.create({
-    model: "claude-opus-4-6",
-    max_tokens: 1024,
-    thinking: { type: "enabled", budget_tokens: 1024 },
-    system: BIO_SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: `Compare this ${sequenceType} wild-type vs mutant sequence and predict functional impact.
+  const response = await cohere.chat({
+    model: "command-r-plus",
+    preamble: BIO_PREAMBLE,
+    responseFormat: { type: "json_object" },
+    message: `Compare this ${sequenceType} wild-type vs mutant sequence and predict functional impact.
 
 Wild-type: ${wildType.slice(0, 500)}
 Mutant:    ${mutant.slice(0, 500)}
@@ -140,11 +127,9 @@ Identify differences and assess likely functional impact. Respond in JSON:
   "explanation": "detailed explanation of predicted impact",
   "conservedPositions": [list of position numbers that appear highly conserved]
 }`,
-      },
-    ],
   });
 
-  const text = response.content.find((b) => b.type === "text")?.text ?? "{}";
+  const text = response.text ?? "{}";
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : { impact: "uncertain", score: 0.5, explanation: text };

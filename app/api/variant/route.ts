@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeVariant } from "@/lib/claude";
+import { analyzeVariantAI } from "@/lib/ai";
 
 const BIO_SERVICE_URL = process.env.BIO_SERVICE_URL ?? "http://localhost:8001";
 
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const dnaRnaChars = /^[ATGCUN]+$/;
     const sequenceType = dnaRnaChars.test(wtClean) ? "nucleotide" : "protein";
 
-    const variantResult = await analyzeVariant(wtClean, mutClean, sequenceType);
+    const variantResult = await analyzeVariantAI(wtClean, mutClean, sequenceType);
 
     return NextResponse.json({
       wildType: wtClean,

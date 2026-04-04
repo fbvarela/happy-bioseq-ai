@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { streamChat } from "@/lib/claude";
+import { streamChatAI } from "@/lib/ai";
 import { getAnalysis, getChatHistory, saveChatMessage } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of streamChat(
+          for await (const chunk of streamChatAI(
             analysis.rawSequence,
             analysis.bioAnalysis,
             analysis.aiAnnotation,

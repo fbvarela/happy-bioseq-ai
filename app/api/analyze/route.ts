@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { annotateSequence } from "@/lib/claude";
+import { annotateSequenceAI } from "@/lib/ai";
 import { saveAnalysis } from "@/lib/db";
 import type { BioAnalysis, SequenceAnalysisResult } from "@/lib/types";
 
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     }
 
     // AI annotation via Claude
-    const aiAnnotation = await annotateSequence(clean, bioAnalysis);
+    const aiAnnotation = await annotateSequenceAI(clean, bioAnalysis);
 
     const result: SequenceAnalysisResult = {
       id: randomUUID(),
