@@ -71,13 +71,19 @@ export default function ChatInterface({ analysisId, initialHistory = [], provide
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        full += decoder.decode(value, { stream: true });
+        const chunk = decoder.decode(value, { stream: true });
+        if (chunk.startsWith("\x00ERROR:")) {
+          throw new Error(chunk.slice(7));
+        }
+        full += chunk;
         setMessages((prev) => {
           const updated = [...prev];
           updated[updated.length - 1] = { role: "assistant", content: full };
           return updated;
         });
       }
+
+      if (!full) throw new Error("No response received");
     } catch (err) {
       setMessages((prev) => {
         const updated = [...prev];
@@ -124,7 +130,7 @@ export default function ChatInterface({ analysisId, initialHistory = [], provide
                   : "bg-gray-800 text-gray-100 border border-gray-700 rounded-bl-sm"
               }`}
             >
-              {!msg.content ? (
+              {!msg.content && streaming ? (
                 <span className="animate-pulse text-gray-400">Thinking...</span>
               ) : msg.role === "user" ? (
                 msg.content

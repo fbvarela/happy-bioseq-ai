@@ -48,6 +48,8 @@ export async function POST(req: NextRequest) {
           saveChatMessage(analysisId, "assistant", assistantResponse).catch(console.error);
         } catch (err) {
           console.error("Stream error:", err);
+          const msg = err instanceof Error ? err.message : "An error occurred";
+          controller.enqueue(encoder.encode(`\x00ERROR:${msg}`));
         } finally {
           controller.close();
         }
