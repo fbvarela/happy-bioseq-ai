@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeVariantAI } from "@/lib/ai";
+import { variantDiffTS } from "@/lib/bio";
 
-const BIO_SERVICE_URL = process.env.BIO_SERVICE_URL ?? "http://localhost:8001";
+const BIO_SERVICE_URL = process.env.BIO_SERVICE_URL;
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,24 +22,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Sequences too short" }, { status: 400 });
     }
 
-    // Get diff positions from bio-service
-    let diffPositions: number[] = [];
-    try {
-      const bioRes = await fetch(`${BIO_SERVICE_URL}/variant`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wild_type: wtClean, mutant: mutClean }),
-        signal: AbortSignal.timeout(15_000),
-      });
-      if (bioRes.ok) {
-        const data = await bioRes.json();
-        diffPositions = data.diff_positions ?? [];
+    // Get diff positions — try bio-service first, fall back to TS engine
+    let diffData = variantDiffTS(wtClean, mutClean);
+
+    if (BIO_SERVICE_URL) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 15_000);
+        const bioRes = await fetch(`${BIO_SERVICE_URL}/variant`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wild_type: wtClean, mutant: mutClean }),
+          signal: controller.signal,
+        });
+        clearTimeout(timer);
+        if (bioRes.ok) diffData = await bioRes.json();
+      } catch {
+        // bio-service unavailable — diffData already set by TS engine
       }
-    } catch {
-      // bio-service optional for variant
     }
 
-    // Detect sequence type
     const dnaRnaChars = /^[ATGCUN]+$/;
     const sequenceType = dnaRnaChars.test(wtClean) ? "nucleotide" : "protein";
 
@@ -47,7 +50,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       wildType: wtClean,
       mutant: mutClean,
-      diffPositions,
+      diffPositions: diffData.diff_positions ?? [],
       sequenceType,
       ...variantResult,
     });
