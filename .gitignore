@@ -35,6 +35,11 @@ bio-service/venv/
 
 # TypeScript
 *.tsbuildinfo
+next-env.d.ts
 
 # Vercel
 .vercel
+
+# Cloudflare
+.open-next/
+.wrangler/

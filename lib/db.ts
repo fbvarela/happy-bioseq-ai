@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import type { SequenceAnalysisResult } from "./types";
+import type { SequenceAnalysisResult, LiteratureResult } from "./types";
 
 function getDb() {
   const url = process.env.DATABASE_URL;
@@ -9,33 +9,38 @@ function getDb() {
 
 export async function initDb() {
   const sql = getDb();
+  await sql`CREATE EXTENSION IF NOT EXISTS vector`;
   await sql`
-    CREATE EXTENSION IF NOT EXISTS vector;
-
     CREATE TABLE IF NOT EXISTS sequence_analyses (
-      id TEXT PRIMARY KEY,
+      id           TEXT PRIMARY KEY,
       raw_sequence TEXT NOT NULL,
       bio_analysis JSONB NOT NULL,
       ai_annotation JSONB NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
+      created_at   TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
     CREATE TABLE IF NOT EXISTS chat_messages (
-      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-      analysis_id TEXT NOT NULL REFERENCES sequence_analyses(id),
-      role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
-      content TEXT NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
+      id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      analysis_id TEXT NOT NULL REFERENCES sequence_analyses(id) ON DELETE CASCADE,
+      role        TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+      content     TEXT NOT NULL,
+      created_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_chat_messages_analysis_id
+      ON chat_messages(analysis_id, created_at)
+  `;
+  await sql`
     CREATE TABLE IF NOT EXISTS literature (
-      id TEXT PRIMARY KEY,
-      pubmed_id TEXT UNIQUE,
-      title TEXT NOT NULL,
-      abstract TEXT,
-      embedding vector(1536),
+      id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      pubmed_id  TEXT UNIQUE,
+      title      TEXT NOT NULL,
+      abstract   TEXT,
+      embedding  vector(1024),
       created_at TIMESTAMPTZ DEFAULT NOW()
-    );
+    )
   `;
 }
 
@@ -100,4 +105,64 @@ export async function getChatHistory(
     ORDER BY created_at ASC
   `;
   return rows as Array<{ role: "user" | "assistant"; content: string }>;
+}
+
+export async function getRecentAnalyses(limit = 20): Promise<
+  Array<{ id: string; sequenceType: string; length: number; summary: string; createdAt: string }>
+> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT id, raw_sequence, bio_analysis, ai_annotation, created_at
+    FROM sequence_analyses
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `;
+  return rows.map((r) => ({
+    id: r.id as string,
+    sequenceType: (r.bio_analysis as { sequenceType: string }).sequenceType,
+    length: (r.bio_analysis as { length: number }).length,
+    summary: (r.ai_annotation as { summary: string }).summary?.slice(0, 120) ?? "",
+    createdAt: (r.created_at as Date).toISOString(),
+  }));
+}
+
+export async function saveLiterature(
+  papers: LiteratureResult[],
+  embeddings: number[][]
+): Promise<void> {
+  const sql = getDb();
+  for (let i = 0; i < papers.length; i++) {
+    const p = papers[i];
+    const emb = embeddings[i];
+    await sql`
+      INSERT INTO literature (pubmed_id, title, abstract, embedding)
+      VALUES (${p.pubmedId}, ${p.title}, ${p.abstract}, ${JSON.stringify(emb)})
+      ON CONFLICT (pubmed_id) DO UPDATE SET
+        title    = EXCLUDED.title,
+        abstract = EXCLUDED.abstract,
+        embedding = EXCLUDED.embedding
+    `;
+  }
+}
+
+export async function findSimilarLiterature(
+  queryEmbedding: number[],
+  limit = 5
+): Promise<LiteratureResult[]> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT pubmed_id, title, abstract,
+           1 - (embedding <=> ${JSON.stringify(queryEmbedding)}::vector) AS relevance_score
+    FROM literature
+    WHERE embedding IS NOT NULL
+    ORDER BY embedding <=> ${JSON.stringify(queryEmbedding)}::vector
+    LIMIT ${limit}
+  `;
+  return rows.map((r) => ({
+    pubmedId: r.pubmed_id as string,
+    title: r.title as string,
+    abstract: r.abstract as string,
+    relevanceScore: r.relevance_score as number,
+    url: `https://pubmed.ncbi.nlm.nih.gov/${r.pubmed_id}/`,
+  }));
 }

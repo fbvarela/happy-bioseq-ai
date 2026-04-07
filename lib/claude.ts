@@ -1,9 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { BioAnalysis, ChatMessage } from "./types";
 
-export const claude = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Lazy-initialize so a missing/empty API key doesn't crash module import
+let _claude: Anthropic | null = null;
+function getClient(): Anthropic {
+  if (!_claude) {
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (!key) throw new Error("ANTHROPIC_API_KEY is not configured");
+    _claude = new Anthropic({ apiKey: key });
+  }
+  return _claude;
+}
 
 const BIO_SYSTEM_PROMPT = `You are BioSeq AI, an expert bioinformatics assistant specializing in DNA, RNA, and protein sequence analysis. You have deep knowledge of molecular biology, genomics, proteomics, and structural biology.
 
@@ -16,6 +23,20 @@ When analyzing sequences:
 
 You assist wet-lab biologists who may not have computational expertise.`;
 
+/** Strip markdown fences then extract the first JSON object. */
+export function parseJsonResponse<T>(text: string, fallback: T): T {
+  const stripped = text
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+  const match = stripped.match(/\{[\s\S]*\}/);
+  try {
+    return match ? JSON.parse(match[0]) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function annotateSequence(
   sequence: string,
   bioAnalysis: BioAnalysis
@@ -27,7 +48,7 @@ export async function annotateSequence(
   diseaseAssociations?: string[];
   structuralFeatures?: string[];
 }> {
-  const stream = claude.messages.stream({
+  const stream = getClient().messages.stream({
     model: "claude-opus-4-6",
     max_tokens: 2048,
     thinking: { type: "enabled", budget_tokens: 1024 },
@@ -61,13 +82,7 @@ Respond in JSON format:
 
   const response = await stream.finalMessage();
   const text = response.content.find((b) => b.type === "text")?.text ?? "{}";
-
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) : { summary: text };
-  } catch {
-    return { summary: text };
-  }
+  return parseJsonResponse(text, { summary: text });
 }
 
 export async function* streamChat(
@@ -86,14 +101,17 @@ Annotation summary: ${(annotation as { summary?: string }).summary ?? "none"}
 
 Raw sequence (first 500 chars): ${sequence.slice(0, 500)}`;
 
+  // Cap history to last 20 messages (10 turns) to stay within context limits
+  const recentHistory = history.slice(-20);
+
   const messages: Anthropic.MessageParam[] = [
     { role: "user", content: contextBlock },
     { role: "assistant", content: "I have reviewed the sequence and its analysis. How can I help you?" },
-    ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+    ...recentHistory.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     { role: "user", content: userMessage },
   ];
 
-  const stream = claude.messages.stream({
+  const stream = getClient().messages.stream({
     model: "claude-opus-4-6",
     max_tokens: 1024,
     system: BIO_SYSTEM_PROMPT,
@@ -120,7 +138,7 @@ export async function analyzeVariant(
   explanation: string;
   conservedPositions?: number[];
 }> {
-  const response = await claude.messages.create({
+  const response = await getClient().messages.create({
     model: "claude-opus-4-6",
     max_tokens: 1024,
     thinking: { type: "enabled", budget_tokens: 1024 },
@@ -145,10 +163,5 @@ Identify differences and assess likely functional impact. Respond in JSON:
   });
 
   const text = response.content.find((b) => b.type === "text")?.text ?? "{}";
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) : { impact: "uncertain", score: 0.5, explanation: text };
-  } catch {
-    return { impact: "uncertain", score: 0.5, explanation: text };
-  }
+  return parseJsonResponse(text, { impact: "uncertain", score: 0.5, explanation: text });
 }

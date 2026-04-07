@@ -55,31 +55,38 @@ def find_orfs(sequence: str, min_length: int = 100) -> list[dict]:
     for strand, nuc in [(+1, seq), (-1, seq.reverse_complement())]:
         for frame in range(3):
             trans = str(nuc[frame:].translate())
-            aa_start = 0
             in_orf = False
             start_pos = 0
+
+            def _emit(start: int, end: int) -> None:
+                length = end - start
+                if length * 3 < min_length:
+                    return
+                if strand == 1:
+                    nt_start = frame + start * 3
+                    nt_end = frame + end * 3
+                else:
+                    nt_end = len(sequence) - frame - start * 3
+                    nt_start = len(sequence) - frame - end * 3
+                orfs.append({
+                    "start": int(nt_start),
+                    "end": int(nt_end),
+                    "strand": "+" if strand == 1 else "-",
+                    "length": int(length),
+                    "translation": trans[start:end],
+                })
 
             for i, aa in enumerate(trans):
                 if aa == "M" and not in_orf:
                     in_orf = True
                     start_pos = i
                 elif aa == "*" and in_orf:
-                    length = i - start_pos
-                    if length * 3 >= min_length:
-                        nt_start = frame + start_pos * 3
-                        nt_end = frame + i * 3
-                        if strand == -1:
-                            nt_start = len(sequence) - nt_end
-                            nt_end = len(sequence) - frame - start_pos * 3
-
-                        orfs.append({
-                            "start": int(nt_start),
-                            "end": int(nt_end),
-                            "strand": "+" if strand == 1 else "-",
-                            "length": int(length),
-                            "translation": trans[start_pos:i],
-                        })
+                    _emit(start_pos, i)
                     in_orf = False
+
+            # Flush ORF that runs to end of sequence without a stop codon
+            if in_orf:
+                _emit(start_pos, len(trans))
 
     orfs.sort(key=lambda x: x["length"], reverse=True)
     return orfs[:10]  # top 10 by length

@@ -1,5 +1,6 @@
 import { CohereClient } from "cohere-ai";
 import type { BioAnalysis, ChatMessage } from "./types";
+import { parseJsonResponse } from "./claude";
 
 export const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY,
@@ -28,7 +29,7 @@ export async function annotateSequenceCohere(
   structuralFeatures?: string[];
 }> {
   const response = await cohere.chat({
-    model: "command-r-plus",
+    model: "command-r-plus-08-2024",
     preamble: BIO_PREAMBLE,
     responseFormat: { type: "json_object" },
     message: `Analyze this ${bioAnalysis.sequenceType} sequence and provide biological annotation.
@@ -54,12 +55,7 @@ Respond in JSON format:
   });
 
   const text = response.text ?? "{}";
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) : { summary: text };
-  } catch {
-    return { summary: text };
-  }
+  return parseJsonResponse(text, { summary: text });
 }
 
 export async function* streamChatCohere(
@@ -78,17 +74,18 @@ Annotation summary: ${(annotation as { summary?: string }).summary ?? "none"}
 
 Raw sequence (first 500 chars): ${sequence.slice(0, 500)}`;
 
+  const recentHistory = history.slice(-20);
   const chatHistory = [
     { role: "USER" as const, message: contextBlock },
     { role: "CHATBOT" as const, message: "I have reviewed the sequence and its analysis. How can I help you?" },
-    ...history.map((m) => ({
+    ...recentHistory.map((m) => ({
       role: m.role === "user" ? ("USER" as const) : ("CHATBOT" as const),
       message: m.content,
     })),
   ];
 
   const stream = await cohere.chatStream({
-    model: "command-r-plus",
+    model: "command-r-plus-08-2024",
     preamble: BIO_PREAMBLE,
     chatHistory,
     message: userMessage,
@@ -112,7 +109,7 @@ export async function analyzeVariantCohere(
   conservedPositions?: number[];
 }> {
   const response = await cohere.chat({
-    model: "command-r-plus",
+    model: "command-r-plus-08-2024",
     preamble: BIO_PREAMBLE,
     responseFormat: { type: "json_object" },
     message: `Compare this ${sequenceType} wild-type vs mutant sequence and predict functional impact.
@@ -130,10 +127,5 @@ Identify differences and assess likely functional impact. Respond in JSON:
   });
 
   const text = response.text ?? "{}";
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) : { impact: "uncertain", score: 0.5, explanation: text };
-  } catch {
-    return { impact: "uncertain", score: 0.5, explanation: text };
-  }
+  return parseJsonResponse(text, { impact: "uncertain", score: 0.5, explanation: text });
 }

@@ -1,0 +1,23 @@
+name = "happy-bioseq-ai"
+main = ".open-next/worker.js"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+NEXT_PUBLIC_APP_URL = "https://bioseq.happyfactory.app"
+
+[[routes]]
+pattern = "bioseq.happyfactory.app"
+zone_name = "happyfactory.app"
+custom_domain = true
+
+[env.dev]
+name = "happy-bioseq-dev"
+
+[env.dev.vars]
+NEXT_PUBLIC_APP_URL = "https://bioseq-dev.happyfactory.app"
+
+[[env.dev.routes]]
+pattern = "bioseq-dev.happyfactory.app"
+zone_name = "happyfactory.app"
+custom_domain = true

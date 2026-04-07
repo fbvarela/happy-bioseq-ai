@@ -1,24 +1,42 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
 import type { ChatMessage } from "@/lib/types";
+import type { AIProvider } from "@/lib/ai";
 
 interface Props {
   analysisId: string;
   initialHistory?: ChatMessage[];
+  provider?: AIProvider;
 }
 
-const SUGGESTED_QUESTIONS = [
+const ALL_QUESTIONS = [
   "What disease could a mutation at position 100 cause?",
   "Are there known drugs targeting this protein family?",
   "Summarize what this gene does in plain English",
   "What species share similar sequences?",
+  "Is this likely a coding or non-coding region?",
+  "What would happen if the start codon were mutated?",
+  "Are there any known disease-associated variants in this region?",
+  "What motifs suggest this could be a regulatory element?",
+  "How conserved is this sequence across mammals?",
+  "What experimental techniques would you use to study this gene?",
+  "Does this sequence have any signal peptide characteristics?",
+  "What transcription factors might bind to this promoter region?",
 ];
 
-export default function ChatInterface({ analysisId, initialHistory = [] }: Props) {
+function pickSuggestions(n = 4): string[] {
+  const shuffled = [...ALL_QUESTIONS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+export default function ChatInterface({ analysisId, initialHistory = [], provider }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialHistory);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [suggestions] = useState(() => pickSuggestions(4));
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,7 +58,7 @@ export default function ChatInterface({ analysisId, initialHistory = [] }: Props
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ analysisId, message: text }),
+        body: JSON.stringify({ analysisId, message: text, provider }),
       });
 
       if (!res.ok) throw new Error("Chat request failed");
@@ -53,13 +71,19 @@ export default function ChatInterface({ analysisId, initialHistory = [] }: Props
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        full += decoder.decode(value, { stream: true });
+        const chunk = decoder.decode(value, { stream: true });
+        if (chunk.startsWith("\x00ERROR:")) {
+          throw new Error(chunk.slice(7));
+        }
+        full += chunk;
         setMessages((prev) => {
           const updated = [...prev];
           updated[updated.length - 1] = { role: "assistant", content: full };
           return updated;
         });
       }
+
+      if (!full) throw new Error("No response received");
     } catch (err) {
       setMessages((prev) => {
         const updated = [...prev];
@@ -81,7 +105,7 @@ export default function ChatInterface({ analysisId, initialHistory = [] }: Props
           <div className="space-y-3">
             <p className="text-gray-400 text-sm">Ask anything about the analyzed sequence:</p>
             <div className="grid gap-2">
-              {SUGGESTED_QUESTIONS.map((q) => (
+              {suggestions.map((q) => (
                 <button
                   key={q}
                   onClick={() => sendMessage(q)}
@@ -106,8 +130,23 @@ export default function ChatInterface({ analysisId, initialHistory = [] }: Props
                   : "bg-gray-800 text-gray-100 border border-gray-700 rounded-bl-sm"
               }`}
             >
-              {msg.content || (
+              {!msg.content && streaming ? (
                 <span className="animate-pulse text-gray-400">Thinking...</span>
+              ) : msg.role === "user" ? (
+                msg.content
+              ) : (
+                <ReactMarkdown
+                  rehypePlugins={[rehypeSanitize]}
+                  components={{
+                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
+                    code: ({ children }) => <code className="bg-gray-900 text-green-300 px-1 rounded font-mono text-xs">{children}</code>,
+                    strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
               )}
             </div>
           </div>

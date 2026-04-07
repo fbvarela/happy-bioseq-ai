@@ -7,6 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "cf:build": "npx opennextjs-cloudflare build",
+    "cf:dev": "npx wrangler dev",
+    "cf:deploy": "npx wrangler deploy",
+    "cf:deploy:dev": "npx wrangler deploy --env dev",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "bio:dev": "cd bio-service && uvicorn main:app --reload --port 8001"
@@ -14,11 +18,15 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@neondatabase/serverless": "^0.10.0",
+    "@opennextjs/cloudflare": "^1.18.0",
     "cohere-ai": "^8.0.0",
     "drizzle-orm": "^0.38.3",
     "next": "^15.1.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "rehype-sanitize": "^6.0.0",
+    "wrangler": "^4.81.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useProvider } from "@/components/ProviderContext";
 
 interface VariantResult {
   wildType: string;
@@ -20,26 +21,47 @@ const IMPACT_CONFIG: Record<string, { label: string; color: string; bar: string 
   deleterious: { label: "Deleterious", color: "text-red-400", bar: "bg-red-500" },
 };
 
+const VIEW_WINDOW = 200;
+
 function SequenceViewer({ sequence, diffPositions, label }: { sequence: string; diffPositions: number[]; label: string }) {
   const diffSet = new Set(diffPositions);
+  const truncated = sequence.length > VIEW_WINDOW;
+
+  // Show a window around the first diff, or the start if no diffs
+  const anchor = diffPositions.length > 0 ? diffPositions[0] : 0;
+  const start = Math.max(0, anchor - 80);
+  const end = Math.min(sequence.length, start + VIEW_WINDOW);
+  const visible = truncated ? sequence.slice(start, end) : sequence;
+  const offset = truncated ? start : 0;
+
   return (
     <div>
       <p className="text-xs text-gray-400 mb-1">{label}</p>
       <div className="font-mono text-xs bg-gray-900 border border-gray-700 rounded-lg p-3 break-all leading-relaxed">
-        {sequence.split("").map((char, i) => (
-          <span
-            key={i}
-            className={diffSet.has(i) ? "bg-red-900 text-red-300 rounded" : "text-green-300"}
-          >
-            {char}
-          </span>
-        ))}
+        {truncated && start > 0 && (
+          <span className="text-gray-600">…{start} chars… </span>
+        )}
+        {visible.split("").map((char, i) => {
+          const pos = offset + i;
+          return (
+            <span
+              key={pos}
+              className={diffSet.has(pos) ? "bg-red-900 text-red-300 rounded" : "text-green-300"}
+            >
+              {char}
+            </span>
+          );
+        })}
+        {truncated && end < sequence.length && (
+          <span className="text-gray-600"> …{sequence.length - end} more chars</span>
+        )}
       </div>
     </div>
   );
 }
 
 export default function VariantComparator() {
+  const { provider } = useProvider();
   const [wildType, setWildType] = useState("");
   const [mutant, setMutant] = useState("");
   const [result, setResult] = useState<VariantResult | null>(null);
@@ -58,7 +80,7 @@ export default function VariantComparator() {
       const res = await fetch("/api/variant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wildType, mutant }),
+        body: JSON.stringify({ wildType, mutant, provider }),
       });
 
       if (!res.ok) {
@@ -143,18 +165,15 @@ export default function VariantComparator() {
                 {result.diffPositions.length <= 10 && `: ${result.diffPositions.map((p) => p + 1).join(", ")}`}
               </h3>
               <SequenceViewer
-                sequence={result.wildType.slice(0, 300)}
-                diffPositions={result.diffPositions.filter((p) => p < 300)}
+                sequence={result.wildType}
+                diffPositions={result.diffPositions}
                 label="Wild-type"
               />
               <SequenceViewer
-                sequence={result.mutant.slice(0, 300)}
-                diffPositions={result.diffPositions.filter((p) => p < 300)}
+                sequence={result.mutant}
+                diffPositions={result.diffPositions}
                 label="Mutant"
               />
-              {result.wildType.length > 300 && (
-                <p className="text-xs text-gray-500">Showing first 300 characters</p>
-              )}
             </div>
           )}
         </div>
