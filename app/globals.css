@@ -7,3 +7,27 @@
     @apply bg-gray-950 text-gray-100;
   }
 }
+
+/* Light mode base - override body when not in dark mode */
+body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+.dark body {
+  background-color: #030712;
+  color: #f3f4f6;
+}
+/* Nav theming */
+.app-nav {
+  background-color: rgba(248, 250, 252, 0.8);
+  border-bottom-color: #e2e8f0;
+  color: #0f172a;
+}
+.dark .app-nav {
+  background-color: rgba(3, 7, 18, 0.8);
+  border-bottom-color: #1f2937;
+  color: #f3f4f6;
+}
+.app-nav a, .app-nav span {
+  color: inherit;
+}
