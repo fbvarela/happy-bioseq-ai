@@ -1,8 +1,9 @@
 import { neon } from "@neondatabase/serverless";
 import type { SequenceAnalysisResult, LiteratureResult } from "./types";
+import { getEnv } from "@/lib/env";
 
 function getDb() {
-  const url = process.env.DATABASE_URL;
+  const url = getEnv("DATABASE_URL");
   if (!url) throw new Error("DATABASE_URL is not set");
   return neon(url);
 }

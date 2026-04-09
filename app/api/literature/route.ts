@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cohere } from "@/lib/cohere";
+import { getCohere } from "@/lib/cohere";
 import { saveLiterature, findSimilarLiterature } from "@/lib/db";
 import type { LiteratureResult } from "@/lib/types";
 
+import { getEnv } from "@/lib/env";
+
 const PUBMED_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
-const PUBMED_KEY = process.env.PUBMED_API_KEY ? `&api_key=${process.env.PUBMED_API_KEY}` : "";
+const PUBMED_KEY = getEnv("PUBMED_API_KEY") ? `&api_key=${getEnv("PUBMED_API_KEY")}` : "";
 
 async function searchPubMed(query: string, maxResults = 8): Promise<string[]> {
   const encoded = encodeURIComponent(query);
@@ -74,7 +76,7 @@ export async function POST(req: NextRequest) {
     const texts = [queryText, ...papers.map((p) => `${p.title}. ${p.abstract}`)];
 
     try {
-      const embedRes = await cohere.embed({
+      const embedRes = await getCohere().embed({
         model: "embed-english-v3.0",
         texts,
         inputType: "search_query",
