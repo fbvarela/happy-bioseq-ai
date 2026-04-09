@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Script from "next/script";
 import SetupButton from "@/components/SetupButton";
 import { ProviderProvider, ProviderToggle } from "@/components/ProviderContext";
 import NavLinks from "@/components/NavLinks";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "BioSeq AI — Sequence Analysis Assistant",
@@ -12,28 +15,34 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive">{`(function(){try{var t=localStorage.getItem('theme')||'dark';if(t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){document.documentElement.classList.add('dark')}})();`}</Script>
+      </head>
       <body className="min-h-screen bg-gray-950">
-        <ProviderProvider>
-          <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur sticky top-0 z-50">
-            <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-              <a href="/" className="flex items-center gap-2">
-                <span className="text-green-400 font-bold text-lg tracking-tight">
-                  BioSeq<span className="text-white">AI</span>
-                </span>
-                <span className="text-xs text-gray-500 border border-gray-700 px-2 py-0.5 rounded-full">
-                  beta
-                </span>
-              </a>
-              <div className="flex items-center gap-6">
-                <NavLinks />
-                <ProviderToggle />
-                <SetupButton />
+        <ThemeProvider>
+          <ProviderProvider>
+            <nav className="app-nav border-b border-gray-800 bg-gray-950/80 backdrop-blur sticky top-0 z-50">
+              <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+                <a href="/" className="flex items-center gap-2">
+                  <span className="text-green-400 font-bold text-lg tracking-tight">
+                    BioSeq<span className="text-white">AI</span>
+                  </span>
+                  <span className="text-xs text-gray-500 border border-gray-700 px-2 py-0.5 rounded-full">
+                    beta
+                  </span>
+                </a>
+                <div className="flex items-center gap-6">
+                  <NavLinks />
+                  <ProviderToggle />
+                  <ThemeToggle />
+                  <SetupButton />
+                </div>
               </div>
-            </div>
-          </nav>
-          <main>{children}</main>
-        </ProviderProvider>
+            </nav>
+            <main>{children}</main>
+          </ProviderProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
