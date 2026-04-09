@@ -3,6 +3,7 @@ import "./globals.css";
 import SetupButton from "@/components/SetupButton";
 import { ProviderProvider, ProviderToggle } from "@/components/ProviderContext";
 import NavLinks from "@/components/NavLinks";
+import CookieBanner from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: "BioSeq AI — Sequence Analysis Assistant",
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </nav>
           <main>{children}</main>
+          <CookieBanner />
         </ProviderProvider>
       </body>
     </html>
