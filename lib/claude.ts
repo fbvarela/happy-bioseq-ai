@@ -1,11 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { BioAnalysis, ChatMessage } from "./types";
+import { getEnv } from "@/lib/env";
 
 // Lazy-initialize so a missing/empty API key doesn't crash module import
 let _claude: Anthropic | null = null;
 function getClient(): Anthropic {
   if (!_claude) {
-    const key = process.env.ANTHROPIC_API_KEY;
+    const key = getEnv("ANTHROPIC_API_KEY");
     if (!key) throw new Error("ANTHROPIC_API_KEY is not configured");
     _claude = new Anthropic({ apiKey: key });
   }

@@ -1,10 +1,13 @@
 import { CohereClient } from "cohere-ai";
 import type { BioAnalysis, ChatMessage } from "./types";
 import { parseJsonResponse } from "./claude";
+import { getEnv } from "@/lib/env";
 
-export const cohere = new CohereClient({
-  token: process.env.COHERE_API_KEY,
-});
+let _cohere: CohereClient | null = null;
+export function getCohere() {
+  if (!_cohere) _cohere = new CohereClient({ token: getEnv("COHERE_API_KEY") });
+  return _cohere;
+}
 
 const BIO_PREAMBLE = `You are BioSeq AI, an expert bioinformatics assistant specializing in DNA, RNA, and protein sequence analysis. You have deep knowledge of molecular biology, genomics, proteomics, and structural biology.
 
@@ -28,7 +31,7 @@ export async function annotateSequenceCohere(
   diseaseAssociations?: string[];
   structuralFeatures?: string[];
 }> {
-  const response = await cohere.chat({
+  const response = await getCohere().chat({
     model: "command-r-plus-08-2024",
     preamble: BIO_PREAMBLE,
     responseFormat: { type: "json_object" },
@@ -84,7 +87,7 @@ Raw sequence (first 500 chars): ${sequence.slice(0, 500)}`;
     })),
   ];
 
-  const stream = await cohere.chatStream({
+  const stream = await getCohere().chatStream({
     model: "command-r-plus-08-2024",
     preamble: BIO_PREAMBLE,
     chatHistory,
@@ -108,7 +111,7 @@ export async function analyzeVariantCohere(
   explanation: string;
   conservedPositions?: number[];
 }> {
-  const response = await cohere.chat({
+  const response = await getCohere().chat({
     model: "command-r-plus-08-2024",
     preamble: BIO_PREAMBLE,
     responseFormat: { type: "json_object" },
