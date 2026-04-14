@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0a1a0f"/>
+  <!-- DNA double helix - left strand -->
+  <path d="M180 80 Q256 160 180 240 Q256 320 180 400 Q256 480 180 520"
+        stroke="#22c55e" stroke-width="18" fill="none" stroke-linecap="round"/>
+  <!-- DNA double helix - right strand -->
+  <path d="M332 -10 Q256 80 332 160 Q256 240 332 320 Q256 400 332 480"
+        stroke="#16a34a" stroke-width="18" fill="none" stroke-linecap="round"/>
+  <!-- Base pairs (rungs) -->
+  <line x1="198" y1="120" x2="314" y2="120" stroke="#4ade80" stroke-width="8" opacity="0.6" stroke-linecap="round"/>
+  <line x1="186" y1="180" x2="326" y2="180" stroke="#4ade80" stroke-width="8" opacity="0.5" stroke-linecap="round"/>
+  <line x1="192" y1="240" x2="320" y2="240" stroke="#4ade80" stroke-width="8" opacity="0.6" stroke-linecap="round"/>
+  <line x1="186" y1="300" x2="326" y2="300" stroke="#4ade80" stroke-width="8" opacity="0.5" stroke-linecap="round"/>
+  <line x1="198" y1="360" x2="314" y2="360" stroke="#4ade80" stroke-width="8" opacity="0.6" stroke-linecap="round"/>
+  <!-- AI sparkle -->
+  <circle cx="390" cy="100" r="32" fill="#22c55e" opacity="0.9"/>
+  <text x="390" y="111" text-anchor="middle" font-size="30" font-weight="bold" fill="#fff" font-family="sans-serif">AI</text>
+</svg>

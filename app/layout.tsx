@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Script from "next/script";
 import SetupButton from "@/components/SetupButton";
@@ -7,10 +7,27 @@ import NavLinks from "@/components/NavLinks";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
+export const viewport: Viewport = {
+  themeColor: "#0a1a0f",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "BioSeq AI — Sequence Analysis Assistant",
   description:
     "AI-powered DNA, RNA, and protein sequence analysis for researchers",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/icon.svg",
+    apple: "/icons/icon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "BioSeq AI",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
