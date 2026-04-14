@@ -1,0 +1,23 @@
+{
+  "name": "BioSeq AI — Sequence Analysis",
+  "short_name": "BioSeq AI",
+  "description": "AI-powered DNA, RNA, and protein sequence analysis for researchers",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#030712",
+  "theme_color": "#0a1a0f",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
