@@ -8,6 +8,11 @@ function getDb() {
   return neon(url);
 }
 
+// Exposed for other lib modules (e.g. auth) that need a tagged-template SQL client.
+export function getSql() {
+  return getDb();
+}
+
 export async function initDb() {
   const sql = getDb();
   await sql`CREATE EXTENSION IF NOT EXISTS vector`;
