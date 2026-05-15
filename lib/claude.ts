@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { BioAnalysis, ChatMessage } from "./types";
 import { getEnv } from "@/lib/env";
+import { SYSTEM_PROMPT as BIO_SYSTEM_PROMPT } from "./chat-config";
 
 // Lazy-initialize so a missing/empty API key doesn't crash module import
 let _claude: Anthropic | null = null;
@@ -12,17 +13,6 @@ function getClient(): Anthropic {
   }
   return _claude;
 }
-
-const BIO_SYSTEM_PROMPT = `You are BioSeq AI, an expert bioinformatics assistant specializing in DNA, RNA, and protein sequence analysis. You have deep knowledge of molecular biology, genomics, proteomics, and structural biology.
-
-When analyzing sequences:
-- Be precise and scientifically accurate
-- Use standard nomenclature (HGNC gene names, UniProt identifiers, etc.)
-- Cite relevant biological context
-- Explain findings in plain English while maintaining scientific rigor
-- Flag uncertainties clearly
-
-You assist wet-lab biologists who may not have computational expertise.`;
 
 /** Strip markdown fences then extract the first JSON object. */
 export function parseJsonResponse<T>(text: string, fallback: T): T {
