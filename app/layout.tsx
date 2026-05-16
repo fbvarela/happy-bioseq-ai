@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Script from "next/script";
 import SetupButton from "@/components/SetupButton";
+import FloatingChatButton from "@/components/FloatingChatButton";
 import { ProviderProvider, ProviderToggle } from "@/components/ProviderContext";
 import NavLinks from "@/components/NavLinks";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <main>{children}</main>
           </ProviderProvider>
         </ThemeProvider>
+        <FloatingChatButton />
       </body>
     </html>
   );
