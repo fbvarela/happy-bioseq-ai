@@ -2,32 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-gray-950 text-gray-100;
-  }
+:root {
+  --bio-bg: #f4f8fb;
+  --bio-surface: #ffffff;
+  --bio-surface-muted: #eaf1f5;
+  --bio-border: #cbd8e1;
+  --bio-text: #17232d;
+  --bio-muted: #607482;
+  --bio-brand: #087f8c;
+  --bio-brand-strong: #075e68;
+  --bio-code: #edf7f3;
 }
 
-/* Light mode base - override body when not in dark mode */
-body {
-  background-color: #f8fafc;
-  color: #0f172a;
+.dark {
+  --bio-bg: #0b1319;
+  --bio-surface: #111e26;
+  --bio-surface-muted: #172a34;
+  --bio-border: #2c414c;
+  --bio-text: #e7f0f3;
+  --bio-muted: #9bb0b9;
+  --bio-brand: #55c7c8;
+  --bio-brand-strong: #8ce1de;
+  --bio-code: #0a211f;
 }
-.dark body {
-  background-color: #030712;
-  color: #f3f4f6;
+
+@layer base {
+  html { background: var(--bio-bg); }
+  body {
+    @apply min-h-screen;
+    background: var(--bio-bg);
+    color: var(--bio-text);
+    font-feature-settings: "tnum" 1, "ss01" 1;
+  }
+  ::selection { background: color-mix(in srgb, var(--bio-brand) 25%, transparent); }
+  :focus-visible { outline: 2px solid var(--bio-brand); outline-offset: 2px; }
 }
-/* Nav theming */
+
+/* Preserve existing markup while giving every surface a consistent lab UI treatment. */
 .app-nav {
-  background-color: rgba(248, 250, 252, 0.8);
-  border-bottom-color: #e2e8f0;
-  color: #0f172a;
+  background: color-mix(in srgb, var(--bio-bg) 90%, transparent) !important;
+  border-bottom-color: var(--bio-border) !important;
+  color: var(--bio-text) !important;
+  backdrop-filter: blur(14px);
 }
-.dark .app-nav {
-  background-color: rgba(3, 7, 18, 0.8);
-  border-bottom-color: #1f2937;
-  color: #f3f4f6;
+.app-nav a, .app-nav span { color: inherit; }
+
+.bg-gray-950, .bg-gray-900, .bg-gray-800 { background-color: var(--bio-surface) !important; }
+.bg-gray-950 { background-color: var(--bio-bg) !important; }
+.bg-gray-900 { background-color: var(--bio-surface-muted) !important; }
+.bg-gray-800 { background-color: var(--bio-surface) !important; }
+.border-gray-800, .border-gray-700 { border-color: var(--bio-border) !important; }
+.text-white, .text-gray-100, .text-gray-200, .text-gray-300 { color: var(--bio-text) !important; }
+.text-gray-400, .text-gray-500, .text-gray-600 { color: var(--bio-muted) !important; }
+.text-green-300, .text-green-400 { color: var(--bio-brand) !important; }
+.bg-green-600 { background-color: var(--bio-brand) !important; }
+.bg-gray-950.rounded-lg, pre.bg-gray-950 { background-color: var(--bio-code) !important; }
+
+button, a, summary, input, textarea, select { touch-action: manipulation; }
+button, a[role="button"] { min-height: 2.25rem; }
+
+/* Resource detail: compact, scannable sections and a clearer two-column rhythm. */
+main .max-w-6xl { max-width: 76rem; }
+main .max-w-6xl > .flex.items-center.justify-between { padding-bottom: 1rem; border-bottom: 1px solid var(--bio-border); }
+main .grid.lg\\:grid-cols-2 { align-items: start; gap: 1.25rem !important; }
+main .rounded-2xl, main .rounded-xl { border-radius: .7rem !important; box-shadow: 0 8px 24px color-mix(in srgb, var(--bio-text) 7%, transparent); }
+main h1 { letter-spacing: -.025em; }
+main h2 { letter-spacing: -.01em; }
+main .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+main .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: .5rem; }
+
+@media (max-width: 640px) {
+  .app-nav > div { padding-block: .65rem; }
+  .app-nav > div > div { gap: .35rem !important; }
+  main .max-w-6xl { padding-inline: 1rem; padding-block: 1.25rem; }
+  main .max-w-6xl > .flex.items-center.justify-between { align-items: flex-start; gap: .75rem; margin-bottom: 1.25rem; }
+  main .grid.lg\\:grid-cols-2 { display: flex; flex-direction: column; }
+  main .grid.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  input, textarea, select, button { font-size: 16px; }
 }
-.app-nav a, .app-nav span {
-  color: inherit;
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
