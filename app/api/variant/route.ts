@@ -6,7 +6,7 @@ const BIO_SERVICE_URL = process.env.BIO_SERVICE_URL;
 
 export async function POST(req: NextRequest) {
   try {
-    const { wildType, mutant, provider } = await req.json();
+    const { wildType, mutant } = await req.json();
 
     if (!wildType || !mutant) {
       return NextResponse.json(
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const dnaRnaChars = /^[ATGCUN]+$/;
     const sequenceType = dnaRnaChars.test(wtClean) ? "nucleotide" : "protein";
 
-    const variantResult = await analyzeVariantAI(wtClean, mutClean, sequenceType, provider);
+    const variantResult = await analyzeVariantAI(wtClean, mutClean, sequenceType);
 
     return NextResponse.json({
       wildType: wtClean,

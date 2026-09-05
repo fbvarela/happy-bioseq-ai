@@ -9,7 +9,7 @@ const BIO_SERVICE_URL = process.env.BIO_SERVICE_URL;
 
 export async function POST(req: NextRequest) {
   try {
-    const { sequence, provider } = await req.json();
+    const { sequence } = await req.json();
 
     if (!sequence || typeof sequence !== "string") {
       return NextResponse.json({ error: "sequence is required" }, { status: 400 });
@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // AI annotation via Claude
-    const aiAnnotation = await annotateSequenceAI(clean, bioAnalysis, provider);
+    // AI annotation via Cohere
+    const aiAnnotation = await annotateSequenceAI(clean, bioAnalysis);
 
     const result: SequenceAnalysisResult = {
       id: randomUUID(),
