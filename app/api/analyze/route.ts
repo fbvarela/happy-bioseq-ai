@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
     };
 
-    // Persist to DB (non-blocking — don't fail if DB is down)
-    saveAnalysis(result).catch((e) => console.error("DB save failed:", e));
+    // Wait for persistence before returning so the analysis page can load the record.
+    await saveAnalysis(result);
 
     return NextResponse.json(result);
   } catch (err) {
