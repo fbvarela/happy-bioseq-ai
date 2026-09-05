@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useProvider } from "@/components/ProviderContext";
 
 interface VariantResult {
   wildType: string;
@@ -61,7 +60,6 @@ function SequenceViewer({ sequence, diffPositions, label }: { sequence: string; 
 }
 
 export default function VariantComparator() {
-  const { provider } = useProvider();
   const [wildType, setWildType] = useState("");
   const [mutant, setMutant] = useState("");
   const [result, setResult] = useState<VariantResult | null>(null);
@@ -80,7 +78,7 @@ export default function VariantComparator() {
       const res = await fetch("/api/variant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wildType, mutant, provider }),
+        body: JSON.stringify({ wildType, mutant }),
       });
 
       if (!res.ok) {

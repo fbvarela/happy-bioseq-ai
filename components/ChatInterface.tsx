@@ -4,12 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import type { ChatMessage } from "@/lib/types";
-import type { AIProvider } from "@/lib/ai";
 
 interface Props {
   analysisId: string;
   initialHistory?: ChatMessage[];
-  provider?: AIProvider;
 }
 
 const ALL_QUESTIONS = [
@@ -32,7 +30,7 @@ function pickSuggestions(n = 4): string[] {
   return shuffled.slice(0, n);
 }
 
-export default function ChatInterface({ analysisId, initialHistory = [], provider }: Props) {
+export default function ChatInterface({ analysisId, initialHistory = [] }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialHistory);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -58,7 +56,7 @@ export default function ChatInterface({ analysisId, initialHistory = [], provide
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ analysisId, message: text, provider }),
+        body: JSON.stringify({ analysisId, message: text }),
       });
 
       if (!res.ok) throw new Error("Chat request failed");

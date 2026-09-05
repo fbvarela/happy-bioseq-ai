@@ -1,12 +1,29 @@
 import { CohereClient } from "cohere-ai";
 import type { BioAnalysis, ChatMessage } from "./types";
-import { parseJsonResponse } from "./claude";
 import { getEnv } from "@/lib/env";
 
 let _cohere: CohereClient | null = null;
 export function getCohere() {
-  if (!_cohere) _cohere = new CohereClient({ token: getEnv("COHERE_API_KEY") });
+  if (!_cohere) {
+    const key = getEnv("COHERE_API_KEY");
+    if (!key) throw new Error("COHERE_API_KEY is not configured");
+    _cohere = new CohereClient({ token: key });
+  }
   return _cohere;
+}
+
+/** Strip markdown fences then extract the first JSON object. */
+export function parseJsonResponse<T>(text: string, fallback: T): T {
+  const stripped = text
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+  const match = stripped.match(/\{[\s\S]*\}/);
+  try {
+    return match ? JSON.parse(match[0]) : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 const BIO_PREAMBLE = `You are BioSeq AI, an expert bioinformatics assistant specializing in DNA, RNA, and protein sequence analysis. You have deep knowledge of molecular biology, genomics, proteomics, and structural biology.

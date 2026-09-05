@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Script from "next/script";
 import SetupButton from "@/components/SetupButton";
-import { ProviderProvider, ProviderToggle } from "@/components/ProviderContext";
 import NavLinks from "@/components/NavLinks";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -21,27 +20,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-gray-950">
         <ThemeProvider>
-          <ProviderProvider>
-            <nav className="app-nav border-b border-gray-800 bg-gray-950/80 backdrop-blur sticky top-0 z-50">
-              <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-                <a href="/" className="flex items-center gap-2">
-                  <span className="text-green-400 font-bold text-lg tracking-tight">
-                    BioSeq<span className="text-white">AI</span>
-                  </span>
-                  <span className="text-xs text-gray-500 border border-gray-700 px-2 py-0.5 rounded-full">
-                    beta
-                  </span>
-                </a>
-                <div className="flex items-center gap-6">
-                  <NavLinks />
-                  <ProviderToggle />
-                  <ThemeToggle />
-                  <SetupButton />
-                </div>
+          <nav className="app-nav border-b border-gray-800 bg-gray-950/80 backdrop-blur sticky top-0 z-50">
+            <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+              <a href="/" className="flex items-center gap-2">
+                <span className="text-green-400 font-bold text-lg tracking-tight">
+                  BioSeq<span className="text-white">AI</span>
+                </span>
+                <span className="text-xs text-gray-500 border border-gray-700 px-2 py-0.5 rounded-full">
+                  beta
+                </span>
+              </a>
+              <div className="flex items-center gap-6">
+                <NavLinks />
+                <ThemeToggle />
+                <SetupButton />
               </div>
-            </nav>
-            <main>{children}</main>
-          </ProviderProvider>
+            </div>
+          </nav>
+          <main>{children}</main>
         </ThemeProvider>
       </body>
     </html>

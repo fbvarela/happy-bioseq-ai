@@ -4,7 +4,7 @@ import { getAnalysis, getChatHistory, saveChatMessage } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
-    const { analysisId, message, provider } = await req.json();
+    const { analysisId, message } = await req.json();
 
     if (!analysisId || !message) {
       return new Response(JSON.stringify({ error: "analysisId and message required" }), {
@@ -38,8 +38,7 @@ export async function POST(req: NextRequest) {
             analysis.bioAnalysis,
             analysis.aiAnnotation,
             history,
-            message,
-            provider
+            message
           )) {
             assistantResponse += chunk;
             controller.enqueue(encoder.encode(chunk));

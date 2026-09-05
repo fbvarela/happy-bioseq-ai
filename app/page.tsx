@@ -4,14 +4,12 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import SequenceInput from "@/components/SequenceInput";
 import VariantComparator from "@/components/VariantComparator";
-import { useProvider } from "@/components/ProviderContext";
 
 type Tab = "analyze" | "variant";
 
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { provider } = useProvider();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const tab: Tab = searchParams.get("tab") === "variant" ? "variant" : "analyze";
@@ -23,7 +21,7 @@ function HomeContent() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sequence, provider }),
+        body: JSON.stringify({ sequence }),
       });
 
       if (!res.ok) {
@@ -109,7 +107,7 @@ function HomeContent() {
       <div className="mt-20 grid md:grid-cols-3 gap-6 text-center max-w-4xl mx-auto">
         {[
           { step: "1", title: "Paste sequence", desc: "DNA, RNA, or protein — we auto-detect the type and clean formatting" },
-          { step: "2", title: "Bioinformatics + AI", desc: "Biopython finds ORFs and motifs; Claude annotates function and disease links" },
+          { step: "2", title: "Bioinformatics + AI", desc: "Biopython finds ORFs and motifs; Cohere annotates function and disease links" },
           { step: "3", title: "Ask questions", desc: "Use the chat interface to explore your sequence interactively" },
         ].map((item) => (
           <div key={item.step} className="bg-gray-900 border border-gray-800 rounded-xl p-6">

@@ -1,6 +1,5 @@
 "use client";
 
-import { useProvider } from "@/components/ProviderContext";
 import ChatInterface from "@/components/ChatInterface";
 import type { ChatMessage, AIAnnotation } from "@/lib/types";
 import LiteraturePanel from "@/components/LiteraturePanel";
@@ -12,7 +11,6 @@ interface Props {
 }
 
 export default function AnalyzePageClient({ analysisId, initialHistory, annotation }: Props) {
-  const { provider } = useProvider();
   return (
     <>
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
@@ -22,13 +20,12 @@ export default function AnalyzePageClient({ analysisId, initialHistory, annotati
             <h2 className="text-white font-semibold">AI Research Assistant</h2>
           </div>
           <span className="text-xs text-gray-500 border border-gray-700 px-2 py-0.5 rounded-full capitalize">
-            {provider}
+            Cohere
           </span>
         </div>
         <ChatInterface
           analysisId={analysisId}
           initialHistory={initialHistory}
-          provider={provider}
         />
       </div>
       <div className="mt-6">
